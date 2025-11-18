@@ -1,0 +1,314 @@
+// Prisma Schema for E-commerce Platform
+// Documentation: https://pris.ly/d/prisma-schema
+// Supabase Integration: https://supabase.com/docs/guides/database/prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Required for Supabase connection pooling
+}
+
+// ============================================================================
+// USER MANAGEMENT
+// ============================================================================
+
+/// User model representing application users
+/// @namespace Models
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+
+  // Timestamps for audit trail
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes for performance
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+// ============================================================================
+// PRODUCT CATALOG
+// ============================================================================
+
+/// Category model for hierarchical product organization
+/// Supports unlimited nesting (parent-child relationships)
+model Category {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+
+  // Hierarchical structure
+  parentId String?
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryHierarchy")
+
+  // SEO & i18n
+  metaTitle       String?
+  metaDescription String?
+  i18nKey         String? // Translation key for name/description
+
+  // Display order & visibility
+  sortOrder Int     @default(0)
+  isVisible Boolean @default(true)
+
+  // Relations
+  products ProductCategory[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([slug])
+  @@index([parentId])
+  @@index([sortOrder])
+  @@index([isVisible])
+  @@map("categories")
+}
+
+/// Collection model for curated product groups (e.g., "New Arrivals", "Bestsellers")
+model Collection {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+
+  // SEO & i18n
+  metaTitle       String?
+  metaDescription String?
+  i18nKey         String? // Translation key for name/description
+
+  // Visual
+  imageUrl String?
+
+  // Display order & visibility
+  sortOrder  Int     @default(0)
+  isVisible  Boolean @default(true)
+  isFeatured Boolean @default(false)
+
+  // Relations
+  products ProductCollection[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([slug])
+  @@index([sortOrder])
+  @@index([isVisible])
+  @@index([isFeatured])
+  @@map("collections")
+}
+
+/// Product model - Main product information (apparel-focused)
+model Product {
+  id              String  @id @default(cuid())
+  sku             String  @unique
+  slug            String  @unique
+  name            String
+  description     String?
+  longDescription String? // Rich text/HTML for detailed product page
+
+  // Pricing (base price, variants can override)
+  basePrice      Decimal
+  compareAtPrice Decimal? // For sale pricing display
+
+  // Apparel-specific fields
+  brand            String?
+  material         String? // e.g., "100% Cotton", "Polyester Blend"
+  careInstructions String? // Washing/care instructions
+  madeIn           String? // Country of manufacture
+
+  // SEO & i18n
+  metaTitle       String?
+  metaDescription String?
+  i18nKey         String? // Translation key for name/description
+
+  // Inventory management
+  trackInventory Boolean @default(false) // Toggle inventory tracking per product
+
+  // Product status
+  status ProductStatus @default(DRAFT)
+
+  // Display & sorting
+  sortOrder  Int     @default(0)
+  isFeatured Boolean @default(false)
+
+  // Relations
+  variants    ProductVariant[]
+  images      ProductImage[]
+  categories  ProductCategory[]
+  collections ProductCollection[]
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  // Indexes
+  @@index([sku])
+  @@index([slug])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([sortOrder])
+  @@index([createdAt])
+  @@map("products")
+}
+
+/// Product status enum
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// ProductVariant - Size/color combinations for apparel
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Variant identifiers
+  sku  String @unique
+  name String // e.g., "Red / Large", "Blue / Medium"
+
+  // Variant attributes
+  size     String? // e.g., "XS", "S", "M", "L", "XL", "XXL"
+  color    String? // Color name (e.g., "Red", "Navy Blue")
+  colorHex String? // Hex color for swatch display (e.g., "#FF0000")
+
+  // Pricing (overrides product base price if set)
+  price          Decimal?
+  compareAtPrice Decimal?
+
+  // Weight for shipping calculations
+  weight Decimal? // in grams
+
+  // Inventory
+  inventoryQuantity Int     @default(0)
+  lowStockThreshold Int     @default(5)
+  allowBackorder    Boolean @default(false)
+
+  // Display & availability
+  sortOrder   Int     @default(0)
+  isAvailable Boolean @default(true)
+
+  // Relations
+  images ProductVariantImage[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([productId])
+  @@index([sku])
+  @@index([size])
+  @@index([color])
+  @@index([isAvailable])
+  @@index([sortOrder])
+  @@map("product_variants")
+}
+
+/// ProductImage - Images at product level
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Image data
+  url     String
+  altText String?
+  width   Int?
+  height  Int?
+
+  // Display order
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false) // Primary/featured image
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([productId])
+  @@index([sortOrder])
+  @@index([isPrimary])
+  @@map("product_images")
+}
+
+/// ProductVariantImage - Images at variant level (for color swatches, etc.)
+model ProductVariantImage {
+  id        String         @id @default(cuid())
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // Image data
+  url     String
+  altText String?
+  width   Int?
+  height  Int?
+
+  // Display order
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([variantId])
+  @@index([sortOrder])
+  @@index([isPrimary])
+  @@map("product_variant_images")
+}
+
+/// ProductCategory - Many-to-many relation between products and categories
+model ProductCategory {
+  id         String   @id @default(cuid())
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Unique constraint
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+  @@map("product_categories")
+}
+
+/// ProductCollection - Many-to-many relation between products and collections
+model ProductCollection {
+  id           String     @id @default(cuid())
+  productId    String
+  collectionId String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  // Display order within collection
+  sortOrder Int @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Unique constraint
+  @@unique([productId, collectionId])
+  @@index([productId])
+  @@index([collectionId])
+  @@index([sortOrder])
+  @@map("product_collections")
+}
