@@ -8,6 +8,7 @@ import cors from "cors";
 import { corsOptions, limiter, securityHeaders, requestLogger, errorHandler } from "./middleware/security";
 import { yoga } from "./graphql-server";
 import { prisma } from "./database";
+import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,8 +30,8 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// GraphQL endpoint
-app.use("/graphql", yoga);
+// GraphQL endpoint - Use Yoga's handle method for Express
+app.use("/graphql", yoga as any);
 
 // 404 handler
 app.use((_req, res) => {

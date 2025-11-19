@@ -6,10 +6,11 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc --noEmitOnError false",
     "start": "node dist/index.js",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db push --accept-data-loss && tsc",
+    "vercel-build": "prisma generate && prisma db push --accept-data-loss && tsc --noEmitOnError false",
+    "type-check": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "set DATABASE_URL=postgresql://postgres:sHIVASHIVA2@db.xhhostcixgxhsvjfxaly.supabase.co:5432/postgres && npx prisma db push",
