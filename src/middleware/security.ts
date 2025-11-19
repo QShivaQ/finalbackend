@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
-import cors from "cors";
 import rateLimit from "express-rate-limit";
 
 // CORS configuration
@@ -61,7 +60,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 // Error handling middleware
 export const errorHandler = (
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
