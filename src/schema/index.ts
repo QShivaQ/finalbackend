@@ -46,7 +46,23 @@ const User = builder.prismaObject("User", {
 // AUTH RESPONSE TYPE
 // ============================================================================
 
-const AuthResponse = builder.objectType("AuthResponse", {
+interface AuthResponseType {
+  token: string;
+  refreshToken: string;
+  user: {
+    id: number;
+    email: string;
+    password: string;
+    name: string | null;
+    role: "ADMIN" | "CUSTOMER";
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+const AuthResponse = builder.objectRef<AuthResponseType>("AuthResponse");
+
+AuthResponse.implement({
   fields: (t) => ({
     token: t.exposeString("token"),
     refreshToken: t.exposeString("refreshToken"),

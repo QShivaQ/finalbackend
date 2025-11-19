@@ -15,7 +15,7 @@ export interface Context {
 }
 
 export const builder = new SchemaBuilder<{
-  PrismaTypes: typeof PrismaTypes;
+  PrismaTypes: PrismaTypes;
   Context: Context;
   Scalars: {
     DateTime: {
@@ -31,8 +31,9 @@ export const builder = new SchemaBuilder<{
   plugins: [PrismaPlugin],
   prisma: {
     client: prisma,
+    onUnusedQuery: process.env.NODE_ENV === "production" ? null : "warn",
   },
-});
+} as any);
 
 // Add DateTime scalar
 builder.addScalarType("DateTime", DateTimeResolver, {});

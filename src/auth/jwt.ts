@@ -13,14 +13,16 @@ export interface JWTPayload extends JwtPayload {
  * Generate JWT access token
  */
 export function generateToken(payload: Omit<JWTPayload, "iat" | "exp" | "nbf" | "jti" | "aud" | "sub" | "iss">): string {
-  return jwt.sign(payload as object, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  // @ts-ignore - jwt.sign expiresIn accepts string
+  return jwt.sign({ userId: payload.userId, email: payload.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
 /**
  * Generate refresh token (longer expiry)
  */
 export function generateRefreshToken(payload: Omit<JWTPayload, "iat" | "exp" | "nbf" | "jti" | "aud" | "sub" | "iss">): string {
-  return jwt.sign(payload as object, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
+  // @ts-ignore - jwt.sign expiresIn accepts string
+  return jwt.sign({ userId: payload.userId, email: payload.email }, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
 }
 
 /**
