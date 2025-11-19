@@ -13,6 +13,7 @@ router.get("/", async (req: Request, res: Response) => {
       where: { isVisible: true },
       orderBy: { sortOrder: "asc" },
       include: {
+        image: true,
         _count: {
           select: {
             products: true,
@@ -23,7 +24,6 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.json({ data: collections });
   } catch (error) {
-    console.error("Error fetching collections:", error);
     res.status(500).json({ error: "Failed to fetch collections" });
   }
 });
@@ -39,6 +39,7 @@ router.get("/:slug", async (req: Request, res: Response) => {
     const collection = await prisma.collection.findUnique({
       where: { slug },
       include: {
+        image: true,
         products: {
           orderBy: { sortOrder: "asc" },
           include: {
@@ -47,6 +48,7 @@ router.get("/:slug", async (req: Request, res: Response) => {
                 images: {
                   where: { isPrimary: true },
                   take: 1,
+                  include: { image: true },
                 },
                 variants: {
                   take: 1,
@@ -62,7 +64,7 @@ router.get("/:slug", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Collection not found" });
     }
 
-    // Transform products
+    // Transform products with decimal conversion
     const collectionJSON = {
       ...collection,
       products: collection.products.map((pc) => ({
@@ -74,7 +76,6 @@ router.get("/:slug", async (req: Request, res: Response) => {
 
     res.json({ data: collectionJSON });
   } catch (error) {
-    console.error("Error fetching collection:", error);
     res.status(500).json({ error: "Failed to fetch collection" });
   }
 });

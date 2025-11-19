@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../database.js";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 const router = Router();
@@ -27,7 +28,7 @@ router.get("/", async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.ProductWhereInput = {};
     if (status) {
       where.status = status;
     }
@@ -50,7 +51,7 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     // Build orderBy clause
-    let orderBy: any = { createdAt: "desc" };
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: "desc" };
     if (sortBy) {
       switch (sortBy) {
         case "newest":
@@ -66,10 +67,10 @@ router.get("/", async (req: Request, res: Response) => {
           orderBy = { basePrice: "desc" };
           break;
         case "name-asc":
-          orderBy = { name: "asc" };
+          orderBy = { title: "asc" };
           break;
         case "name-desc":
-          orderBy = { name: "desc" };
+          orderBy = { title: "desc" };
           break;
       }
     }
@@ -85,6 +86,7 @@ router.get("/", async (req: Request, res: Response) => {
           images: {
             where: { isPrimary: true },
             take: 1,
+            include: { image: true },
           },
           variants: {
             take: 1,
@@ -118,7 +120,6 @@ router.get("/", async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
     res.status(500).json({ error: "Failed to fetch products" });
   }
 });
@@ -136,12 +137,14 @@ router.get("/:slug", async (req: Request, res: Response) => {
       include: {
         images: {
           orderBy: { sortOrder: "asc" },
+          include: { image: true },
         },
         variants: {
           orderBy: { sortOrder: "asc" },
           include: {
             images: {
               orderBy: { sortOrder: "asc" },
+              include: { image: true },
             },
           },
         },
@@ -177,7 +180,6 @@ router.get("/:slug", async (req: Request, res: Response) => {
 
     res.json({ data: productJSON });
   } catch (error) {
-    console.error("Error fetching product:", error);
     res.status(500).json({ error: "Failed to fetch product" });
   }
 });
@@ -193,7 +195,7 @@ router.get("/search/index", async (req: Request, res: Response) => {
       select: {
         id: true,
         slug: true,
-        name: true,
+        title: true,
         description: true,
         basePrice: true,
         brand: true,
@@ -201,7 +203,7 @@ router.get("/search/index", async (req: Request, res: Response) => {
         images: {
           where: { isPrimary: true },
           take: 1,
-          select: { url: true },
+          include: { image: { select: { url: true } } },
         },
       },
     });
@@ -209,17 +211,16 @@ router.get("/search/index", async (req: Request, res: Response) => {
     const searchIndex = products.map((product) => ({
       id: product.id,
       slug: product.slug,
-      name: product.name,
+      name: product.title,
       description: product.description || "",
       brand: product.brand || "",
       basePrice: Number(product.basePrice),
-      imageUrl: product.images[0]?.url || "",
+      imageUrl: product.images[0]?.image?.url || "",
       status: product.status,
     }));
 
     res.json({ data: searchIndex });
   } catch (error) {
-    console.error("Error fetching search index:", error);
     res.status(500).json({ error: "Failed to fetch search index" });
   }
 });

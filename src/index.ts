@@ -1,14 +1,13 @@
-import express from "express";
+// MUST load environment variables before any other imports
+// Use override: true to override any existing shell environment variables
 import dotenv from "dotenv";
+dotenv.config({ override: true });
+
+import express from "express";
 import cors from "cors";
 import { corsOptions, limiter, securityHeaders, requestLogger, errorHandler } from "./middleware/security.js";
-import productsRouter from "./routes/products.js";
-import categoriesRouter from "./routes/categories.js";
-import collectionsRouter from "./routes/collections.js";
+import { yoga } from "./graphql-server.js";
 import { prisma } from "./database.js";
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,15 +24,13 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Request logging
 app.use(requestLogger);
 
-// Health check endpoint
+// Health check endpoint (REST)
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// API routes
-app.use("/api/products", productsRouter);
-app.use("/api/categories", categoriesRouter);
-app.use("/api/collections", collectionsRouter);
+// GraphQL endpoint
+app.use("/graphql", yoga);
 
 // 404 handler
 app.use((req, res) => {
@@ -46,12 +43,15 @@ app.use(errorHandler);
 // Start server
 const server = app.listen(PORT, () => {
   console.log(`
-🚀 Backend API Server Running
+🚀 GraphQL API Server Running
 ================================
 Port: ${PORT}
 Environment: ${process.env.NODE_ENV || "development"}
 Database: ${process.env.DATABASE_URL ? "Connected" : "Not configured"}
 Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:5173"}
+GraphQL Endpoint: http://localhost:${PORT}/graphql
+GraphiQL IDE: http://localhost:${PORT}/graphql
+Health Check: http://localhost:${PORT}/health
 ================================
   `);
 });

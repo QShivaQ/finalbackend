@@ -2,6 +2,27 @@
 
 This file provides guidance to Claude Code when working with the backend API codebase.
 
+## 🎯 Working with Non-Technical Users
+
+**CRITICAL: The user is non-technical. You must be FULLY AUTONOMOUS and PROACTIVE.**
+
+### **Guiding Principles:**
+
+1. **Never Ask What You Can Do** - Just fix it and explain what you did
+2. **Prevent Future Issues Proactively** - Add automated checks and validations
+3. **Fix Root Causes, Not Symptoms** - Find and fix ALL instances of a pattern
+4. **Think at the Highest Grade** - Apply best practices from official documentation
+5. **Be Transparent and Educational** - Explain the "why" behind changes
+6. **Always Verify Your Work** - Run builds and tests before claiming success
+
+**Example of Being Proactive:**
+
+❌ BAD: "I found 8 type assertions using `any`. Should I fix them?"
+
+✅ GOOD: "Found 8 type assertions bypassing TypeScript safety. Replacing with proper Prisma-generated types now. Adding ESLint rule to prevent future violations. Running build to verify..."
+
+---
+
 ## Project Overview
 
 This is the **backend API server** for the Qwik e-commerce platform, separated from the frontend for better scalability, security, and deployment flexibility.
@@ -15,6 +36,44 @@ This is the **backend API server** for the Qwik e-commerce platform, separated f
 - **ORM:** Prisma
 - **Security:** Helmet, CORS, Rate Limiting
 - **Validation:** Zod
+
+## Core Philosophy: Best Choice for Long Term
+
+**Every architectural decision in this backend prioritizes long-term maintainability and scalability.**
+
+### Guiding Principles:
+
+1. **Type Safety First**
+   - TypeScript strict mode with zero compromises
+   - Validate all inputs with Zod
+   - Never use `any` types
+   - Prisma provides full type safety from database to API
+
+2. **Security by Design**
+   - Defense in depth: CORS, rate limiting, Helmet, input validation
+   - Never expose internal errors to clients
+   - Sanitize all outputs
+   - Follow OWASP best practices
+
+3. **Scalability from Day One**
+   - Separate backend from frontend for independent scaling
+   - Use connection pooling (Supabase pgbouncer)
+   - Design for horizontal scaling
+   - Stateless API design
+
+4. **Code Quality Standards**
+   - Consistent error handling patterns
+   - Proper logging (not console.log in production)
+   - Structured response formats
+   - Comprehensive input validation
+
+5. **Production-Ready**
+   - No shortcuts or temporary hacks
+   - Every endpoint is production-grade
+   - Proper error handling and recovery
+   - Monitoring and observability built-in
+
+**Remember:** Short-term convenience that compromises long-term quality is never acceptable. When in doubt, choose the approach that makes the codebase easier to maintain, test, and scale.
 
 ## Architecture Principles
 
