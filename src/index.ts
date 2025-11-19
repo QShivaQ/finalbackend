@@ -5,10 +5,9 @@ dotenv.config({ override: true });
 
 import express from "express";
 import cors from "cors";
-import { corsOptions, limiter, securityHeaders, requestLogger, errorHandler } from "./middleware/security";
-import { yoga } from "./graphql-server";
-import { prisma } from "./database";
-import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
+import { corsOptions, limiter, securityHeaders, requestLogger, errorHandler } from "./middleware/security.js";
+import { yoga } from "./graphql-server.js";
+import { prisma } from "./database.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,7 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(requestLogger);
 
 // Health check endpoint (REST)
-app.get("/health", (_req, res) => {
+app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
@@ -34,7 +33,7 @@ app.get("/health", (_req, res) => {
 app.use("/graphql", yoga as any);
 
 // 404 handler
-app.use((_req, res) => {
+app.use((req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
