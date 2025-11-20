@@ -60,7 +60,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 // Error handling middleware
 export const errorHandler = (
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
