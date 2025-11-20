@@ -403,6 +403,21 @@ builder.queryField("me", (t) =>
   })
 );
 
+builder.queryField("user", (t) =>
+  t.field({
+    type: User,
+    nullable: true,
+    args: {
+      email: t.arg.string({ required: true }),
+    },
+    resolve: async (_parent, args) => {
+      return prisma.user.findUnique({
+        where: { email: args.email },
+      });
+    },
+  })
+);
+
 // ----------------------------------------------------------------------------
 // PRODUCT QUERIES
 // ----------------------------------------------------------------------------
@@ -746,6 +761,38 @@ builder.mutationField("login", (t) =>
       const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
       return { token, refreshToken, user };
+    },
+  })
+);
+
+builder.mutationField("createUser", (t) =>
+  t.field({
+    type: User,
+    args: {
+      email: t.arg.string({ required: true }),
+      name: t.arg.string(),
+    },
+    resolve: async (_parent, args) => {
+      // Check if user already exists
+      const existing = await prisma.user.findUnique({
+        where: { email: args.email },
+      });
+
+      if (existing) {
+        throw new Error("User with this email already exists");
+      }
+
+      // Create user without password (OAuth users don't need passwords)
+      const user = await prisma.user.create({
+        data: {
+          email: args.email,
+          name: args.name,
+          password: "", // Empty password for OAuth users
+          role: "CUSTOMER", // Default role
+        },
+      });
+
+      return user;
     },
   })
 );
