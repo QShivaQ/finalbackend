@@ -31,3 +31,5 @@ Thumbs.db
 # Prisma
 prisma/dev.db
 prisma/dev.db-journal
+schema-test.json
+scripts/export-schema.js
