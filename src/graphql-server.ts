@@ -1,10 +1,10 @@
 import { createYoga } from "graphql-yoga";
 import { useDepthLimit } from "@envelop/depth-limit";
-import { schema } from "./schema/index.js";
-import { prisma } from "./database.js";
-import { extractToken, verifyToken } from "./auth/jwt.js";
-import { createLoaders } from "./loaders/index.js";
-import type { Context } from "./schema/builder.js";
+import { schema } from "./schema/index";
+import { prisma } from "./database";
+import { extractToken, verifyToken } from "./auth/jwt";
+import { createLoaders } from "./loaders/index";
+import type { Context } from "./schema/builder";
 
 /**
  * Create GraphQL Yoga server with security plugins

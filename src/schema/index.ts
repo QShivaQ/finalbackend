@@ -1,7 +1,7 @@
-import { builder } from "./builder.js";
-import { hashPassword, comparePassword } from "../auth/password.js";
-import { generateToken, generateRefreshToken } from "../auth/jwt.js";
-import { prisma } from "../database.js";
+import { builder } from "./builder";
+import { hashPassword, comparePassword } from "../auth/password";
+import { generateToken, generateRefreshToken } from "../auth/jwt";
+import { prisma } from "../database";
 
 // ============================================================================
 // ENUMS

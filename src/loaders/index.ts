@@ -1,5 +1,5 @@
 import DataLoader from "dataloader";
-import { prisma } from "../database.js";
+import { prisma } from "../database";
 import type {
   Product,
   Category,

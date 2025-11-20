@@ -2,8 +2,8 @@ import SchemaBuilder from "@pothos/core";
 import PrismaPlugin from "@pothos/plugin-prisma";
 import type PrismaTypes from "@pothos/plugin-prisma/generated";
 import { DateTimeResolver, JSONResolver } from "graphql-scalars";
-import { prisma } from "../database.js";
-import type { Loaders } from "../loaders/index.js";
+import { prisma } from "../database";
+import type { Loaders } from "../loaders/index";
 
 export interface Context {
   prisma: typeof prisma;
