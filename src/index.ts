@@ -40,9 +40,14 @@ app.use((_req, res) => {
 // Error handler (must be last)
 app.use(errorHandler);
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`
+// Export app for Vercel serverless functions
+export default app;
+
+// Only start server if not in serverless environment (Vercel)
+if (process.env.VERCEL !== "1") {
+  // Start server
+  const server = app.listen(PORT, () => {
+    console.log(`
 🚀 GraphQL API Server Running
 ================================
 Port: ${PORT}
@@ -54,31 +59,32 @@ GraphiQL IDE: http://localhost:${PORT}/graphql
 Health Check: http://localhost:${PORT}/health
 ================================
   `);
-});
-
-// Graceful shutdown
-const gracefulShutdown = async (signal: string) => {
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
-
-  server.close(async () => {
-    console.log("HTTP server closed");
-
-    try {
-      await prisma.$disconnect();
-      console.log("Database disconnected");
-      process.exit(0);
-    } catch (err) {
-      console.error("Error during shutdown:", err);
-      process.exit(1);
-    }
   });
 
-  // Force shutdown after 10 seconds
-  setTimeout(() => {
-    console.error("Forced shutdown after timeout");
-    process.exit(1);
-  }, 10000);
-};
+  // Graceful shutdown
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\n${signal} received. Starting graceful shutdown...`);
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+    server.close(async () => {
+      console.log("HTTP server closed");
+
+      try {
+        await prisma.$disconnect();
+        console.log("Database disconnected");
+        process.exit(0);
+      } catch (err) {
+        console.error("Error during shutdown:", err);
+        process.exit(1);
+      }
+    });
+
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      console.error("Forced shutdown after timeout");
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+}
